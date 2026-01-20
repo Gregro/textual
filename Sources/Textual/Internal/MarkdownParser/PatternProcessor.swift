@@ -91,8 +91,30 @@ extension PatternProcessor.Rule {
     }
   }
 
-  static var math: Self {
-    .init(patterns: [.mathBlock, .mathInline]) { token, attributes in
+  /// Creates a math expression rule with optional custom patterns.
+  ///
+  /// - Parameters:
+  ///   - inlinePattern: Custom regex pattern string for inline math. When `nil`, uses the default `$...$` pattern.
+  ///   - blockPattern: Custom regex pattern string for block math. When `nil`, uses the default `$$...$$` pattern.
+  static func math(
+    inlinePattern: String? = nil,
+    blockPattern: String? = nil
+  ) -> Self {
+    let blockTokenPattern: PatternTokenizer.Pattern
+    if let blockPattern {
+      blockTokenPattern = .init(pattern: blockPattern, tokenType: .mathBlock)
+    } else {
+      blockTokenPattern = .mathBlock
+    }
+
+    let inlineTokenPattern: PatternTokenizer.Pattern
+    if let inlinePattern {
+      inlineTokenPattern = .init(pattern: inlinePattern, tokenType: .mathInline)
+    } else {
+      inlineTokenPattern = .mathInline
+    }
+
+    return .init(patterns: [blockTokenPattern, inlineTokenPattern]) { token, attributes in
       guard let latex = token.capturedContent else {
         return nil
       }

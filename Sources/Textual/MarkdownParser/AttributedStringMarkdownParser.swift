@@ -16,10 +16,33 @@ public struct AttributedStringMarkdownParser: MarkupParser {
     /// Enables processing of math expressions into attachments.
     public var mathExpressions: Bool
 
+    /// Custom regex pattern string for inline math expressions.
+    ///
+    /// The pattern must have exactly one capture group containing the LaTeX content.
+    /// When `nil`, uses the default `$...$` pattern. Only used when `mathExpressions` is `true`.
+    ///
+    /// Example using LaTeX delimiters: `"\\\\\\((.+?)\\\\\\)"`
+    public var mathInlinePattern: String?
+
+    /// Custom regex pattern string for block math expressions.
+    ///
+    /// The pattern must have exactly one capture group containing the LaTeX content.
+    /// When `nil`, uses the default `$$...$$` pattern. Only used when `mathExpressions` is `true`.
+    ///
+    /// Example using LaTeX delimiters: `"(?s)\\\\\\[(.+?)\\\\\\]"`
+    public var mathBlockPattern: String?
+
     /// Creates pattern options.
-    public init(emoji: Set<Emoji> = [], mathExpressions: Bool = false) {
+    public init(
+      emoji: Set<Emoji> = [],
+      mathExpressions: Bool = false,
+      mathInlinePattern: String? = nil,
+      mathBlockPattern: String? = nil
+    ) {
       self.emoji = emoji
       self.mathExpressions = mathExpressions
+      self.mathInlinePattern = mathInlinePattern
+      self.mathBlockPattern = mathBlockPattern
     }
   }
 
@@ -37,7 +60,10 @@ public struct AttributedStringMarkdownParser: MarkupParser {
     self.processor = PatternProcessor(
       rules: [
         patternOptions.emoji.isEmpty ? nil : .emoji(patternOptions.emoji),
-        patternOptions.mathExpressions ? .math : nil,
+        patternOptions.mathExpressions ? .math(
+          inlinePattern: patternOptions.mathInlinePattern,
+          blockPattern: patternOptions.mathBlockPattern
+        ) : nil,
       ].compactMap(\.self)
     )
   }

@@ -77,6 +77,33 @@ extension PatternTokenizer {
   struct Pattern {
     let regex: Regex<(Substring, Substring)>
     let tokenType: TokenType
+
+    init(regex: Regex<(Substring, Substring)>, tokenType: TokenType) {
+      self.regex = regex
+      self.tokenType = tokenType
+    }
+
+    /// Creates a pattern from a regex pattern string.
+    ///
+    /// The pattern string must contain exactly one capture group.
+    /// - Parameters:
+    ///   - pattern: A regex pattern string with one capture group.
+    ///   - tokenType: The token type to assign to matches.
+    init(pattern: String, tokenType: TokenType) {
+      // Compile the pattern string into a Regex with one capture group
+      self.regex = try! Regex(pattern).asCapturingRegex()
+      self.tokenType = tokenType
+    }
+  }
+}
+
+private extension Regex where Output == AnyRegexOutput {
+  /// Converts an AnyRegexOutput Regex to one with a single capture group.
+  func asCapturingRegex() -> Regex<(Substring, Substring)> {
+    // We use unsafeBitCast because the underlying regex is the same,
+    // we just need to tell Swift about the expected output type.
+    // The caller is responsible for ensuring the pattern has exactly one capture group.
+    unsafeBitCast(self, to: Regex<(Substring, Substring)>.self)
   }
 }
 
